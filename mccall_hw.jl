@@ -6,25 +6,17 @@ using LinearAlgebra
 using Parameters
 using Plots
 
+# Will use μ = 0 , σ = 0.25 , N = 100
 
-@with_kw mutable struct dist_params
-    mu::Float64 = 0
-    sig::Float64=1
-    N::Int64 = 40
-end
-
-para_dist = dist_params()
-
-function approximateLogNormal(para_dist)
-    @unpack mu, sig, N = para_dist
-    wdist = LogNormal(mu,sig)
+function approximatelognormal(μ,σ,N)
+    wdist = LogNormal(μ,σ)
     wgrid = quantile.(wdist,LinRange(0,1,N+1))
     p = 1/N*ones(N)
     wbar = zeros(N)
     for i in 1:N-1
         wbar[i] = (wgrid[i]+wgrid[i+1])/2
     end
-    wbar[N] = (exp(mu+0.5*sig^2)-dot(p[1:N-1],wbar[1:N-1]))/(1/N)
+    wbar[N] = (exp(μ+0.5*σ^2)-dot(p[1:N-1],wbar[1:N-1]))/(1/N)
     return p,wbar
 end
 
@@ -67,10 +59,21 @@ function findResWageIndex(v)
   return 0
 end
 
-p, w = approximateLogNormal(para_dist)
+# This is about where part B starts
+
+p, w = approximatelognormal(0,0.25,100)
 a = 0.03
 β = 0.98
 c = 3
+
+# I am going to just set up a simple simulation with plot to show this
+vt = zeros(100,100)
+vt[1,:] = mccallbellman(zeros(100),w,p,c,a,β)
+for j in 2:100
+    vt[j,:] = mccallbellman(vt[j-1,:],w,p,c,a,β)
+end
+plot(w,zeros(100)) # Plots a baseline
+plot!(w,vt[100,:]) # Plots the final iteration of the value function (can play around with this number)
 
 vFinalB = solvemccall(w,p,c,a,β)
 
@@ -82,6 +85,8 @@ resWageIndex = findResWageIndex(vFinalB)
 resWage = w[resWageIndex]
 
 println("Reservation wage is ", resWage, ", at index ", resWageIndex)
+
+# This is basically where part C starts
 
 #initialize multiple-reservation-wage vector as zeros
 variedResWages = zeros(100)
