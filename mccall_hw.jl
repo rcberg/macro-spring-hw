@@ -1,6 +1,5 @@
 using Pkg
 ENV["GRDIR"]=""
-Pkg.build("GR")
 using Distributions
 using LinearAlgebra
 using Parameters
@@ -45,6 +44,8 @@ function solvemccall(w,p,c,a,β,ϵ=1e-6)
     return v
 end
 
+
+
 function findResWageIndex(v)
   for i in 1:length(v)
     #test value of wage offer against value of next highest wage offer
@@ -59,21 +60,20 @@ function findResWageIndex(v)
   return 0
 end
 
-# This is about where part B starts
+# This is basically part B I think
 
 p, w = approximatelognormal(0,0.25,100)
 a = 0.03
-β = 0.98
-c = 3
+β = 0.99
+c = 0.8
 
-# I am going to just set up a simple simulation with plot to show this
 vt = zeros(100,100)
 vt[1,:] = mccallbellman(zeros(100),w,p,c,a,β)
 for j in 2:100
     vt[j,:] = mccallbellman(vt[j-1,:],w,p,c,a,β)
 end
-plot(w,zeros(100)) # Plots a baseline
-plot!(w,vt[100,:]) # Plots the final iteration of the value function (can play around with this number)
+plot(w,zeros(100))
+plot!(w,vt[100,:])
 
 vFinalB = solvemccall(w,p,c,a,β)
 
@@ -86,7 +86,7 @@ resWage = w[resWageIndex]
 
 println("Reservation wage is ", resWage, ", at index ", resWageIndex)
 
-# This is basically where part C starts
+# This is where part C starts
 
 #initialize multiple-reservation-wage vector as zeros
 variedResWages = zeros(100)
