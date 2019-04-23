@@ -66,14 +66,16 @@ p, w = approximatelognormal(0,0.25,100)
 a = 0.03
 β = 0.99
 c = 0.8
+v0 = zeros(length(w))
 
-vt = zeros(100,100)
-vt[1,:] = mccallbellman(zeros(100),w,p,c,a,β)
-for j in 2:100
-    vt[j,:] = mccallbellman(vt[j-1,:],w,p,c,a,β)
+K = 400
+vt = zeros(K, length(v0))
+vt[1,:] = mccallbellman(v0,w,p,c,a,β)
+for k in 2:K
+    vt[k,:] = mccallbellman(vt[k-1,:],w,p,c,a,β)
 end
-plot(w,zeros(100))
-plot!(w,vt[100,:])
+plot(w,v0)
+plot!(w,vt[K,:])
 
 vFinalB = solvemccall(w,p,c,a,β)
 
@@ -103,3 +105,108 @@ end
 
 cAnswer = scatter(newa,variedResWages,color =:blue)
 display(cAnswer)
+
+# Parts D, E, F
+
+# Bellman Eq.: Part D
+
+function mccallbellman_quitsE(v,J,w,p,c,a,β)
+    # Value of reject offer
+    v_reject = zeros(length(w), J+1)
+    v_accept = zeros(length(w), J+1)
+    v_reject[:,1] = β * dot(p, v[:,1]) .+ zeros(length(w))
+    for j in 1:J+1
+        v_accept[:,j] = w .+ (β*((a*(v[:,J+1]) + (1-a)*v[:,J+1])))
+    end
+    for j in 2:J+1
+        v_reject[:,j] = c .+ β * dot(p, v[:,j-1]) .+ zeros(length(w))
+    end
+    # Value of accepting the offer
+    v_n = max.(v_reject, v_accept)
+    return v_n
+end
+
+# Part E: Solving Bellman
+
+function solvemccallquits_E(w,J,p,c,a,β,ϵ=1e-6)
+    # "Initialize"
+    v = zeros(length(w), J+1)
+    diff = 1.
+    # "Check if stopping criteria is reached"
+    while diff > ϵ
+        v_n = mccallbellman_quitsE(v,J,w,p,c,a,β)
+        # "Use supremum norm"
+        diff = norm(v-v_n,Inf)
+        v = v_n # Reset v
+    end
+    return v
+end
+
+p, w = approximatelognormal(0,0.25,100)
+a = 0.03
+β = 0.9
+c = 0.8
+v0 = zeros(length(w), J+1)
+
+J=10
+K = 400
+vt_E = zeros(K, length(w), J+1)
+vt_E[1,:,:] = mccallbellman_quitsE(v0,J,w,p,c,a,β)
+for k in 2:K
+    vt_E[k,:,:] = mccallbellman_quitsE(vt_E[k-1,:,:],J,w,p,c,a,β)
+end
+plot(w,vt_E[K,:,1])
+plot!(w,vt_E[K,:,2])
+plot!(w,vt_E[K,:,11])
+
+vFinal_E = solvemccallquits_E(w,J,p,c,a,β)
+
+variedResWages_E = zeros(J+1)
+for j in 1:J+1
+  variedResWages_E[j] = w[findfirst(vFinal_E[:,j] .> vFinal_E[1,j])]
+end
+
+E_Answer = scatter(variedResWages_E,color =:blue)
+
+# Part F
+
+function mccallbellman_quitsF(v,J,w,p,c,a,β)
+    # Value of reject offer
+    v_reject = zeros(length(w), J+1)
+    v_accept = zeros(length(w), J+1)
+    v_reject[:,1] = β * dot(p, v[:,1]) .+ zeros(length(w))
+    for j in 1:J+1
+        v_accept[:,j] = w .+ (β*((a*(v[:,J+1]) + (1-a)*v[:,1])))
+    end
+    for j in 2:J+1
+        v_reject[:,j] = c .+ β * dot(p, v[:,j-1]) .+ zeros(length(w))
+    end
+    # Value of accepting the offer
+    v_n = max.(v_reject, v_accept)
+    return v_n
+end
+
+# Part G: Solving Bellman from F
+
+function solvemccallquits_F(w,J,p,c,a,β,ϵ=1e-6)
+    # "Initialize"
+    v = zeros(length(w), J+1)
+    diff = 1.
+    # "Check if stopping criteria is reached"
+    while diff > ϵ
+        v_n = mccallbellman_quitsF(v,J,w,p,c,a,β)
+        # "Use supremum norm"
+        diff = norm(v-v_n,Inf)
+        v = v_n # Reset v
+    end
+    return v
+end
+
+vFinal_G = solvemccallquits_F(w,J,p,c,a,β)
+
+variedResWages_G = zeros(J+1)
+for j in 1:J+1
+  variedResWages_G[j] = w[findfirst(vFinal_G[:,j] .> vFinal_G[1,j])]
+end
+
+G_Answer = scatter(variedResWages_G,color =:blue)
