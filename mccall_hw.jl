@@ -171,8 +171,6 @@ for j in 1:J+1
   variedResWages_E[j] = w[findfirst(vFinal_E[:,j] .> vFinal_E[1,j])]
 end
 
-E_Answer = scatter(variedResWages_E,color =:blue)
-
 # Part F
 
 function mccallbellman_quitsF(v,J,w,p,c,a,β)
@@ -214,4 +212,5 @@ for j in 1:J+1
   variedResWages_G[j] = w[findfirst(vFinal_G[:,j] .> vFinal_G[1,j])]
 end
 
-G_Answer = scatter(variedResWages_G,color =:blue)
+E_Answer = scatter(variedResWages_E,color =:blue, xlabel="Unemployment Benefits Remaining", ylabel="Reservation Wage")
+G_Answer = scatter!(variedResWages_G,color =:red)
