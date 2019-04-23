@@ -1,8 +1,13 @@
 using Pkg
 ENV["GRDIR"]=""
+# Pkg.build("GR")
+#Pkg.add("Distributions")
 using Distributions
+#Pkg.add("LinearAlgebra")
 using LinearAlgebra
+#Pkg.add("Parameters")
 using Parameters
+#Pkg.add("Plots")
 using Plots
 
 # Will use μ = 0 , σ = 0.25 , N = 100
